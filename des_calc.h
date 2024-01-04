@@ -4,4 +4,5 @@
 #include <stdio.h>
 
 void initial_permutation(unsigned char * data);
+unsigned char * select_extension();
 #endif

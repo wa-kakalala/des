@@ -12,15 +12,19 @@ int main() {
 		data[i] = rand() % 2 ;
 	}
 
-	for( int i=0;i<10;i++){
+	// for(int i=63;i>=0;i--){
+	// 	printf("%d",data[i]);
+	// }
+	// printf("\r\n");
 
-	}
 
-	for(int i=63;i>=0;i--){
-		printf("%d",data[i]);
+	initial_permutation(data);
+	unsigned char * ext_data = select_extension();
+
+	for( int i=47;i>=0;i--){
+		printf("%d",ext_data[i]);
 	}
 	printf("\r\n");
 	
-	initial_permutation(data);
 	return 0;
 }

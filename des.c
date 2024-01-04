@@ -1,15 +1,26 @@
 #include "des_key.h"
+#include "des_calc.h"
+#include <time.h>
+#include <stdlib.h>
 
 int main() {
+	srand(time(0));
 	unsigned char key[64] = {0};
+	unsigned char data[64] = {0};
 	for( int i=0;i<64;i++){
 		key[i] = (i%2 == 0 ) ? 1:0;
+		data[i] = rand() % 2 ;
 	}
 
-	unsigned char * key48;
-	for( int i=0;i<16;i++){
-		key48 = generate_key(key,i);
+	for( int i=0;i<10;i++){
+
 	}
+
+	for(int i=63;i>=0;i--){
+		printf("%d",data[i]);
+	}
+	printf("\r\n");
 	
+	initial_permutation(data);
 	return 0;
 }

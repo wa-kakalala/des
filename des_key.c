@@ -39,18 +39,13 @@ unsigned char * generate_key(unsigned char* key, unsigned char key_idx) {
         rotate_left += bit_shift[idx];
 	}
 
-    for(unsigned char idx = 0 ; idx < 48 ; idx ++){   
-        
+    for(unsigned char idx = 0 ; idx < 48 ; idx ++){       
         if( key_table_2[idx]-1 < 28 ){
-            // printf("%d\t", (key_table_2[idx]-1-rotate_left+28) % 28 );
             key_48[idx] = key_56[ (key_table_2[idx]-1-rotate_left+28) % 28 ];
         }else{
-            // printf("%d\t", (key_table_2[idx]-1-rotate_left ) % 28 + 28 );
+    
             key_48[idx] = key_56[ (key_table_2[idx]-1-rotate_left ) % 28 + 28 ];
-        }
-
-        // if( (idx+1)%8 == 0 ) printf("\r\n");
-        
+        }   
 	}
     return key_48;
 }

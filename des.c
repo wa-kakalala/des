@@ -20,11 +20,21 @@ int main() {
 
 	initial_permutation(data);
 	unsigned char * ext_data = select_extension();
+	unsigned char * xor_data;
+	unsigned char * s_data;
 
-	for( int i=47;i>=0;i--){
-		printf("%d",ext_data[i]);
+	for( int idx = 0; idx < 16; idx++){
+		xor_data = xor_key(ext_data, key,idx);
+		for( int i=47;i>=0;i--){
+			printf("%d",xor_data[i]);
+		}
+		printf("\r\n");
+		s_data = select_s(xor_data);
+		for( int i=31;i>=0;i--){
+			printf("%d",s_data[i]);
+		}
+		printf("\r\n");
 	}
-	printf("\r\n");
 	
 	return 0;
 }

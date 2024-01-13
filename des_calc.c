@@ -3,8 +3,11 @@
 unsigned char left_data [32] = {0};
 unsigned char right_data[32] = {0};
 unsigned char ext_data  [48] = {0};
-unsigned char xor_data  [48] = {0};
+unsigned char xor48_data[48] = {0};
 unsigned char s_data    [32] = {0};
+unsigned char p_data    [48] = {0};
+unsigned char xor32_data[32] = {0};
+unsigned char res_data  [64] = {0};
 
 //初始置换表
 const static unsigned char ip_table[64] = {
@@ -73,14 +76,28 @@ const static unsigned char sbox[8][64] = {
 }   
 };
 
+//P盒置换
+const static unsigned char p_table[32] = {
+	16 , 7 , 20 , 21 , 29 , 12 , 28 , 17 , 1 , 15 , 23 , 26 , 5 , 18 , 31 , 10 ,
+	2 , 8 , 24 , 14 , 32 , 27 , 3 , 9 , 19 , 13 , 30 , 6 , 22 , 11 , 4 , 25
+} ;
+
+//置换  
+const static unsigned char invp_table[64] = {
+	40 , 8 , 48 , 16 , 56 , 24 , 64 , 32 , 39 , 7 , 47 , 15 , 55 , 23 , 63 , 31 ,
+	38 , 6 , 46 , 14 , 54 , 22 , 62 , 30 , 37 , 5 , 45 , 13 , 53 , 21 , 61 , 29 ,
+	36 , 4 , 44 , 12 , 52 , 20 , 60 , 28 , 35 , 3 , 43 , 11 , 51 , 19 , 59 , 27 ,
+	34 , 2 , 42 , 10 , 50 , 18 , 58 , 26 , 33 , 1 , 41 , 9 , 49 , 17 , 57 , 25
+} ;
+
 // ip
 void initial_permutation(unsigned char * data){
     unsigned char idx;
     for(idx = 0;idx<32;idx ++){
-        left_data[idx] = data[ip_table[idx]-1];
+        right_data[idx] = data[ip_table[idx]-1];
     }
     for(idx = 0;idx<32;idx ++){
-        right_data[idx] = data[ip_table[idx+32]-1];
+        left_data[idx] = data[ip_table[idx+32]-1];
     }
 }
 
@@ -90,19 +107,19 @@ unsigned char * select_extension(){
     for( idx = 0;idx<48;idx++){
         ext_data[idx] = right_data[expa_perm[idx]-1];
     }
+
     return ext_data;
 }
 
-unsigned char * xor_key(unsigned char * ext_data, unsigned char* key, unsigned char key_idx ){
+unsigned char * xor_48(unsigned char * ext_data, unsigned char* key, unsigned char key_idx ){
     unsigned char * key_data= generate_key(key,key_idx);
     unsigned char idx;
-    for( int idx=0;idx<48;idx++){
-        xor_data[idx] = (key_data[idx] + ext_data[idx]) %2;
+    for( idx=0;idx<48;idx++){
+        xor48_data[idx] = (key_data[idx] + ext_data[idx]) %2;
     }
 
-    return xor_data;
+    return xor48_data;
 }
-
 
 unsigned char * select_s(unsigned char * x_data) {
     unsigned char idx;
@@ -111,14 +128,89 @@ unsigned char * select_s(unsigned char * x_data) {
     unsigned res;
     unsigned s_idx=0;
     for( idx = 0;idx<48;idx+=6){
-        row = x_data[idx]*2 + x_data[idx+5];
-        col = x_data[idx+1]*8 + x_data[idx+2]*4 + x_data[idx+3]*2+x_data[idx+4];
+        row = x_data[idx+5]*2 + x_data[idx];
+        col = x_data[idx+4]*8 + x_data[idx+3]*4 + x_data[idx+2]*2+x_data[idx+1];
         res = sbox[idx/6][row*16+col];
-        s_data[s_idx++] = (res >> 3) & 0x01;
-        s_data[s_idx++] = (res >> 2) & 0x01;
+        s_data[s_idx++] = (res >> 0) & 0x01;
         s_data[s_idx++] = (res >> 1) & 0x01;
-        s_data[s_idx++] = res  & 0x01;
+        s_data[s_idx++] = (res >> 2) & 0x01;
+        s_data[s_idx++] = (res >> 3) & 0x01;
     }
-
     return s_data;
 }
+
+unsigned char * permutation(unsigned char * s_data){
+    unsigned char idx; 
+    for( idx = 0;idx<32;idx++){
+        p_data[idx] = s_data[p_table[idx]-1];
+    }
+    return p_data;
+}
+
+void xor_32(unsigned char* left_data,unsigned char*right_data){
+    unsigned char idx;
+    for( idx=0;idx<32;idx++){
+        xor32_data[idx] = (left_data[idx] + right_data[idx]) %2;
+    }
+}
+
+unsigned char * invinit_permutation(unsigned char * left_data,unsigned char*right_data){
+    unsigned char idx; 
+    unsigned char new_idx;
+    for( idx = 0;idx<64;idx++){
+        new_idx = invp_table[idx]-1;
+        if( new_idx >= 32 ) {
+            res_data[idx] = right_data[new_idx-32];
+        }else {
+            res_data[idx] = left_data[new_idx];
+        }
+    }
+    return res_data;
+}
+
+unsigned char check_key(unsigned char *key){
+    unsigned char idx;
+    unsigned char count=0;
+    for( idx =0;idx<64;idx++){
+        count += key[idx];
+        if( (idx+1) %8 == 0) {
+            if(count % 2 != 1) return 0;
+            count = 0;
+        }
+    }
+    return 1;
+}
+
+/**
+ * @bref: des encryption or decryption
+ * @param data : the data to encrypt or decrypt
+ * @param key  : the key 
+ * @param mode : the mode  0-> encrypt 1-> decrypt
+ * @return     : if key is error -> NULL , else result of des
+*/
+unsigned char * des(unsigned char* data, unsigned char*key,unsigned char mode){
+    initial_permutation(data);
+    unsigned char idx;
+    unsigned char index;
+    if(!check_key(key)) return NULL;
+    for(idx =0;idx<16;idx++){
+        xor_32(
+            left_data, 
+            permutation(
+                select_s(
+                    xor_48(
+                        select_extension(),
+                        key,
+                        (mode==1)?15-idx:idx
+                    )
+                )
+            )
+        );
+        for(index = 0;index<32;index++){
+            left_data[index] = right_data[index];
+            right_data[index]= xor32_data[index];
+        }
+    }
+    return invinit_permutation(left_data,right_data);
+}
+

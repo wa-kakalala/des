@@ -14,3 +14,13 @@ Data Encryption Standard
 
 ![image-20240104195133416](pic/image-20240104195133416.png)
 
+## 三、编译
+
+```c
+make
+./des
+```
+
+## 四、结果
+
+![image-20240113232827224](pic/image-20240113232827224.png)

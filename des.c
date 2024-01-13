@@ -1,40 +1,59 @@
+#include <stdlib.h>
+#include <time.h>
 #include "des_key.h"
 #include "des_calc.h"
-#include <time.h>
-#include <stdlib.h>
 
 int main() {
-	srand(time(0));
-	unsigned char key[64] = {0};
+	unsigned char key[64]  = {0};
 	unsigned char data[64] = {0};
-	for( int i=0;i<64;i++){
-		key[i] = (i%2 == 0 ) ? 1:0;
-		data[i] = rand() % 2 ;
-	}
-
-	// for(int i=63;i>=0;i--){
-	// 	printf("%d",data[i]);
-	// }
-	// printf("\r\n");
-
-
-	initial_permutation(data);
-	unsigned char * ext_data = select_extension();
-	unsigned char * xor_data;
-	unsigned char * s_data;
-
-	for( int idx = 0; idx < 16; idx++){
-		xor_data = xor_key(ext_data, key,idx);
-		for( int i=47;i>=0;i--){
-			printf("%d",xor_data[i]);
-		}
-		printf("\r\n");
-		s_data = select_s(xor_data);
-		for( int i=31;i>=0;i--){
-			printf("%d",s_data[i]);
-		}
-		printf("\r\n");
-	}
+	char * key_str  = "1010101110101011101010111010101110101011101010111010101110101011";
+	// char * data_str = "1111011101001010010000011010001010111011010111100001010111011111";
+	char * data_str = "0110110011101111101101101000010011110010111100000111111110111001";
 	
+	for(int i=0;i<64;i++){
+		data[i] = data_str[i]-'0';
+		key[i]  = key_str[i]-'0';
+	}
+
+	printf("key: ");
+	for(int i=0;i<64;i++) {
+		printf("%d",key[i]);	
+	}
+	printf("\r\n");
+
+	printf("------------------------\r\n");
+	printf("encryption:\r\n");
+	printf("- data  : ");
+	for(int i=0;i<64;i++) {
+		printf("%d",data[i]);	
+	}
+	printf("\r\n");
+	unsigned char * res = des(data,key,0);
+	if( res == NULL ){
+		printf("the key is error \r\n");
+	} else {
+		printf("- result: ");
+		for(int i=0;i<64;i++) {
+			printf("%d",res[i]);
+		}
+	}
+	printf("\r\n");
+	printf("------------------------\r\n");
+	printf("decryption:\r\n");
+	printf("- data  : ");
+	for(int i=0;i<64;i++) {
+		printf("%d",res[i]);	
+	}
+	printf("\r\n");
+	res = des(res,key,1);
+	if( res == NULL ){
+		printf("the key is error \r\n");
+	} else {
+		printf("- result: ");
+		for(int i=0;i<64;i++) {
+			printf("%d",res[i]);
+		}
+	}
+	printf("\r\n");
 	return 0;
 }

@@ -17,7 +17,9 @@ Data Encryption Standard
 ## 三、编译
 
 ```c
+// 编译
 make
+// 运行
 ./des
 ```
 
